@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id               Int         @id @default(autoincrement())
+  name             String
+  slug             String      @unique
+  sku              String?     @unique
+  shortDescription String
+  description      String?
+  price            Int
+  compareAtPrice   Int?
+  stock            Int         @default(0)
+  imageUrl         String?
+  isFeatured       Boolean     @default(false)
+  isActive         Boolean     @default(true)
+  sortOrder        Int         @default(0)
+  metaTitle        String?
+  metaDescription  String?
+  categoryId       Int
+  category         Category    @relation(fields: [categoryId], references: [id])
+  orderItems       OrderItem[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  code         String      @unique
+  customerName String
+  phone        String
+  address      String
+  note         String?
+  subtotal     Int
+  shippingFee  Int         @default(0)
+  discount     Int         @default(0)
+  couponCode   String?
+  total        Int
+  status       OrderStatus @default(NEW)
+  items        OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model OrderItem {
+  id                  Int     @id @default(autoincrement())
+  orderId             Int
+  productId           Int?
+  productNameSnapshot String
+  priceSnapshot       Int
+  quantity            Int
+  lineTotal           Int
+  order               Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product? @relation(fields: [productId], references: [id])
+}
+
+model SiteSetting {
+  id                  Int      @id @default(1)
+  siteName            String
+  hotline             String
+  zaloLink            String
+  heroTitle           String
+  heroDescription     String
+  homeMetaTitle       String
+  homeMetaDescription String
+  defaultShippingFee  Int      @default(0)
+  freeShippingFrom   Int      @default(0)
+  couponCode         String?
+  couponDiscountType String   @default("NONE")
+  couponDiscountValue Int     @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  SHIPPING
+  COMPLETED
+  CANCELLED
+}
