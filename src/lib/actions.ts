@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { revalidatePath } from "next/cache";
@@ -65,46 +66,179 @@ async function getOrderPricing(subtotal: number, couponCodeRaw?: string) {
   };
 }
 
-export async function createOrder(formData: FormData) {
-  const items = JSON.parse(String(formData.get("items") || "[]")) as Array<{ id: number; quantity: number }>;
-  if (!items.length) redirect("/?order=empty");
+function randomOrderCode() {
+  return `MY${Date.now()}${randomBytes(3).toString("hex").toUpperCase()}`;
+}
 
-  const products = await prisma.product.findMany({ where: { id: { in: items.map((i) => i.id) }, isActive: true } });
-  let subtotal = 0;
-  const orderItems = items.map((item) => {
-    const product = products.find((p) => p.id === item.id);
-    if (!product) throw new Error("Sản phẩm không tồn tại");
-    const lineTotal = product.price * item.quantity;
-    subtotal += lineTotal;
+function randomLookupToken() {
+  return randomBytes(24).toString("hex");
+}
+
+function redirectOrderError(code: string) {
+  redirect(`/?order=${code}`);
+}
+
+function normalizeText(value: FormDataEntryValue | null) {
+  return String(value || "").trim();
+}
+
+function normalizePhone(value: FormDataEntryValue | null) {
+  return String(value || "").replace(/\s+/g, "").trim();
+}
+
+function validateCustomerFields(customerName: string, phone: string, address: string, note: string) {
+  if (customerName.length < 2 || customerName.length > 80) redirectOrderError("invalid");
+  if (!/^[0-9+]{8,15}$/.test(phone)) redirectOrderError("invalid");
+  if (address.length < 5 || address.length > 200) redirectOrderError("invalid");
+  if (note.length > 500) redirectOrderError("invalid");
+}
+
+function parseCartItems(raw: string) {
+  try {
+    const parsed = JSON.parse(raw) as Array<{ id?: unknown; quantity?: unknown }>;
+    if (!Array.isArray(parsed)) return null;
+
+    const grouped = new Map<number, number>();
+
+    for (const item of parsed) {
+      const id = Number(item?.id);
+      const quantity = Number(item?.quantity);
+      if (!Number.isInteger(id) || id <= 0) continue;
+      if (!Number.isFinite(quantity)) continue;
+      const safeQty = Math.max(1, Math.min(20, Math.floor(quantity)));
+      grouped.set(id, Math.min((grouped.get(id) || 0) + safeQty, 20));
+    }
+
+    return Array.from(grouped.entries()).map(([id, quantity]) => ({ id, quantity }));
+  } catch {
+    return null;
+  }
+}
+
+async function createOrderRecord({
+  items,
+  customerName,
+  phone,
+  address,
+  note,
+  couponCode,
+}: {
+  items: Array<{ id: number; quantity: number }>;
+  customerName: string;
+  phone: string;
+  address: string;
+  note: string;
+  couponCode?: string;
+}) {
+  if (!items.length) redirectOrderError("empty");
+
+  validateCustomerFields(customerName, phone, address, note);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const products = await tx.product.findMany({
+      where: { id: { in: items.map((i) => i.id) }, isActive: true },
+      select: { id: true, name: true, price: true, stock: true },
+    });
+
+    let subtotal = 0;
+    const orderItems = items.map((item) => {
+      const product = products.find((p) => p.id === item.id);
+      if (!product) redirectOrderError("invalid");
+      const existingProduct = product!;
+
+      const safeQty = Math.max(1, Math.min(20, Math.floor(Number(item.quantity) || 1)));
+      if (existingProduct.stock <= 0 || safeQty > existingProduct.stock) redirectOrderError("stock");
+
+      const lineTotal = existingProduct.price * safeQty;
+      subtotal += lineTotal;
+
+      return {
+        productId: existingProduct.id,
+        productNameSnapshot: existingProduct.name,
+        priceSnapshot: existingProduct.price,
+        quantity: safeQty,
+        lineTotal,
+      };
+    });
+
+    const pricing = await getOrderPricing(subtotal, couponCode || "");
+
+    for (const item of orderItems) {
+      const updated = await tx.product.updateMany({
+        where: { id: item.productId, stock: { gte: item.quantity } },
+        data: { stock: { decrement: item.quantity } },
+      });
+      if (updated.count === 0) redirectOrderError("stock");
+    }
+
+    const order = await tx.order.create({
+      data: {
+        code: randomOrderCode(),
+        lookupToken: randomLookupToken(),
+        customerName,
+        phone,
+        address,
+        note: note || null,
+        subtotal,
+        shippingFee: pricing.shippingFee,
+        discount: pricing.discount,
+        couponCode: pricing.couponCode,
+        total: pricing.total,
+        items: { create: orderItems },
+      },
+      select: {
+        id: true,
+        code: true,
+        lookupToken: true,
+        total: true,
+      },
+    });
+
     return {
-      productId: product.id,
-      productNameSnapshot: product.name,
-      priceSnapshot: product.price,
-      quantity: item.quantity,
-      lineTotal,
+      ...pricing,
+      order,
     };
   });
 
-  const pricing = await getOrderPricing(subtotal, String(formData.get("couponCode") || ""));
+  return result;
+}
 
-  await prisma.order.create({
-    data: {
-      code: `MY${Date.now()}`,
-      customerName: String(formData.get("customerName") || ""),
-      phone: String(formData.get("phone") || ""),
-      address: String(formData.get("address") || ""),
-      note: String(formData.get("note") || ""),
-      subtotal,
-      shippingFee: pricing.shippingFee,
-      discount: pricing.discount,
-      couponCode: pricing.couponCode,
-      total: pricing.total,
-      items: { create: orderItems },
-    },
+export async function createOrder(formData: FormData) {
+  const items = parseCartItems(String(formData.get("items") || "[]"));
+  if (items === null) redirectOrderError("invalid");
+  const safeItems = items!;
+
+  const pricing = await createOrderRecord({
+    items: safeItems,
+    customerName: normalizeText(formData.get("customerName")),
+    phone: normalizePhone(formData.get("phone")),
+    address: normalizeText(formData.get("address")),
+    note: normalizeText(formData.get("note")),
+    couponCode: normalizeText(formData.get("couponCode")),
   });
+
   revalidatePath("/");
   revalidatePath("/admin/orders");
-  redirect(pricing.couponCode ? "/?order=success&coupon=applied" : "/?order=success");
+  redirect(`/dat-hang-thanh-cong?token=${encodeURIComponent(pricing.order.lookupToken!)}`);
+}
+
+export async function createProductOrder(formData: FormData) {
+  const productId = Number(formData.get("productId") || 0);
+  if (!Number.isInteger(productId) || productId <= 0) redirectOrderError("invalid");
+  const quantity = Math.max(1, Math.min(20, Math.floor(Number(formData.get("quantity") || 1))));
+
+  const pricing = await createOrderRecord({
+    items: [{ id: productId, quantity }],
+    customerName: normalizeText(formData.get("customerName")),
+    phone: normalizePhone(formData.get("phone")),
+    address: normalizeText(formData.get("address")),
+    note: normalizeText(formData.get("note")),
+    couponCode: "",
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/orders");
+  redirect(`/dat-hang-thanh-cong?token=${encodeURIComponent(pricing.order.lookupToken!)}`);
 }
 
 export async function saveProduct(formData: FormData) {
@@ -142,6 +276,61 @@ export async function toggleProduct(id: number) {
   await prisma.product.update({ where: { id }, data: { isActive: !product.isActive } });
   revalidatePath("/");
   revalidatePath("/admin/products");
+}
+
+export async function saveBlogPost(formData: FormData) {
+  const id = Number(formData.get("id") || 0);
+  const title = String(formData.get("title") || "").trim();
+  const slug = String(formData.get("slug") || slugify(title)).trim();
+  const uploadedImage = await saveUploadedImage(formData.get("coverImageFile") as File | null);
+  const coverImageInput = String(formData.get("coverImageUrl") || "").trim();
+  const isPublished = formData.get("isPublished") === "on";
+
+  const currentPost = id ? await prisma.blogPost.findUnique({ where: { id } }) : null;
+  const data = {
+    title,
+    slug,
+    excerpt: String(formData.get("excerpt") || ""),
+    content: String(formData.get("content") || ""),
+    coverImageUrl: uploadedImage || coverImageInput || currentPost?.coverImageUrl || null,
+    authorName: String(formData.get("authorName") || "MyMy Đồ Ăn Vặt"),
+    metaTitle: String(formData.get("metaTitle") || "").trim() || null,
+    metaDescription: String(formData.get("metaDescription") || "").trim() || null,
+    isFeatured: formData.get("isFeatured") === "on",
+    isPublished,
+    publishedAt: isPublished ? currentPost?.publishedAt || new Date() : null,
+  };
+
+  if (id) await prisma.blogPost.update({ where: { id }, data });
+  else await prisma.blogPost.create({ data });
+
+  revalidatePath("/");
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${slug}`);
+  revalidatePath("/admin/blog");
+  redirect("/admin/blog");
+}
+
+export async function toggleBlogPost(id: number) {
+  const post = await prisma.blogPost.findUniqueOrThrow({ where: { id } });
+  const isPublished = !post.isPublished;
+  await prisma.blogPost.update({
+    where: { id },
+    data: { isPublished, publishedAt: isPublished ? post.publishedAt || new Date() : null },
+  });
+  revalidatePath("/");
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
+  revalidatePath("/admin/blog");
+}
+
+export async function deleteBlogPost(id: number) {
+  const post = await prisma.blogPost.findUniqueOrThrow({ where: { id } });
+  await prisma.blogPost.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
+  revalidatePath("/admin/blog");
 }
 
 export async function deleteProduct(id: number) {
@@ -254,7 +443,8 @@ export async function createManualOrder(formData: FormData) {
 
   await prisma.order.create({
     data: {
-      code: `MY${Date.now()}`,
+      code: randomOrderCode(),
+      lookupToken: randomLookupToken(),
       customerName: String(formData.get("customerName") || "Khách lẻ"),
       phone: String(formData.get("phone") || ""),
       address: String(formData.get("address") || ""),
@@ -272,3 +462,4 @@ export async function createManualOrder(formData: FormData) {
   revalidatePath("/admin/orders");
   redirect("/admin/orders?created=1");
 }
+

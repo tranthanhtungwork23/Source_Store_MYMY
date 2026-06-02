@@ -48,7 +48,7 @@ export default async function ProductsPage() {
               <article suppressHydrationWarning key={product.id} className="rounded-3xl bg-white p-4 shadow-sm">
                 <div suppressHydrationWarning className="flex items-start gap-4">
                   <div suppressHydrationWarning className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-orange-50 text-xl">
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" /> : "🥢"}
+                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain p-1" /> : "🥢"}
                   </div>
                   <div suppressHydrationWarning className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-bold">{product.name}</h2>
@@ -91,7 +91,7 @@ export default async function ProductsPage() {
                   <tr key={product.id} className="border-t">
                     <td className="px-4 py-3">
                       <div suppressHydrationWarning className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-orange-50 text-xl">
-                        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" /> : "🥢"}
+                        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain p-1" /> : "🥢"}
                       </div>
                     </td>
                     <td className="px-4 py-3 font-semibold">{product.name}</td>

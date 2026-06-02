@@ -16,6 +16,7 @@ export function AdminNav({ name }: { name: string }) {
         <Link href="/admin/products" className="block min-w-max whitespace-nowrap rounded-xl bg-white/10 px-4 py-3">Sản phẩm</Link>
         <Link href="/admin/orders" className="block min-w-max whitespace-nowrap rounded-xl bg-white/10 px-4 py-3">Đơn hàng</Link>
         <Link href="/admin/categories" className="block min-w-max whitespace-nowrap rounded-xl bg-white/10 px-4 py-3">Danh mục</Link>
+        <Link href="/admin/blog" className="block min-w-max whitespace-nowrap rounded-xl bg-white/10 px-4 py-3">Blog</Link>
         <Link href="/admin/settings" className="block min-w-max whitespace-nowrap rounded-xl bg-white/10 px-4 py-3">Cài đặt</Link>
       </nav>
       <form suppressHydrationWarning action={logoutAdmin} className="mt-5 sm:mt-6">

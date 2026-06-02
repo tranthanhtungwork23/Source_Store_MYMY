@@ -39,7 +39,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               </label>
               <div suppressHydrationWarning className="overflow-hidden rounded-2xl border bg-orange-50">
                 <div suppressHydrationWarning className="flex h-40 items-center justify-center text-5xl">
-                  {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" /> : "🥢"}
+                  {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain p-2" /> : "🥢"}
                 </div>
               </div>
             </div>

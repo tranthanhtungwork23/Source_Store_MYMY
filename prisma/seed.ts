@@ -109,6 +109,43 @@ async function main() {
       create: product,
     });
   }
+
+  const blogPosts = [
+    {
+      title: "Cách chọn bánh tráng ngon, dẻo và hợp khẩu vị",
+      slug: "cach-chon-banh-trang-ngon-de-ban-online-hieu-qua",
+      excerpt: "Gợi ý chọn bánh tráng theo độ dẻo, vị sốt, topping và cách bảo quản để món vẫn ngon khi nhận hàng.",
+      content:
+        "## Vì sao nguyên liệu quyết định trải nghiệm\n\nBánh tráng ngon không chỉ ở sốt mà còn ở độ dẻo, mùi thơm và khả năng giữ vị khi giao hàng.\n\n## Chọn vị theo khẩu vị của bạn\n\nNếu thích vị đậm, bạn có thể chọn món có sốt me, bò khô hoặc tôm khô. Nếu muốn dễ ăn hơn, hãy ưu tiên vị phô mai hoặc ghi chú ít cay khi đặt.\n\n## Cách đặt để shop chuẩn bị đúng ý\n\nBạn nên ghi rõ mức cay, topping muốn thêm và thời gian nhận để shop xác nhận lại trước khi giao.",
+      authorName: "MyMy Team",
+      metaTitle: "Cách chọn bánh tráng ngon, dẻo và hợp khẩu vị",
+      metaDescription: "Gợi ý chọn bánh tráng theo độ dẻo, vị sốt, topping và cách bảo quản để món vẫn ngon khi nhận hàng.",
+      isFeatured: true,
+      isPublished: true,
+      publishedAt: new Date(),
+    },
+    {
+      title: "Cách bảo quản đồ ăn vặt sau khi nhận hàng",
+      slug: "5-cach-tang-don-do-an-vat-nho-noi-dung-blog-chuan-seo",
+      excerpt: "Một vài lưu ý đơn giản để bánh tráng, đậu phộng và đồ uống giữ vị ngon hơn sau khi giao tới.",
+      content:
+        "## Kiểm tra món ngay khi nhận\n\nBạn nên kiểm tra số lượng, topping và ghi chú khẩu vị ngay khi nhận để shop hỗ trợ kịp thời nếu có thiếu sót.\n\n## Bảo quản bánh tráng và topping\n\nBánh tráng nên dùng sớm để giữ độ dẻo. Nếu chưa ăn ngay, hãy đậy kín và để nơi thoáng mát, tránh nắng trực tiếp.\n\n## Đồ uống nên dùng trong ngày\n\nCác món nước ngon nhất khi dùng sớm. Nếu cần để lâu hơn, nên giữ lạnh và lắc đều trước khi uống.",
+      authorName: "MyMy Team",
+      metaTitle: "Cách bảo quản đồ ăn vặt sau khi nhận hàng",
+      metaDescription: "Lưu ý bảo quản bánh tráng, đậu phộng và đồ uống để món giữ vị ngon hơn sau khi giao tới.",
+      isFeatured: false,
+      isPublished: true,
+      publishedAt: new Date(),
+    },
+  ];
+
+  for (const post of blogPosts) {
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: post,
+      create: post,
+    });
+  }
 }
 
 main()
