@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ProductFallbackVisual } from "@/components/ProductFallbackVisual";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 function money(value: number) {
   return value.toLocaleString("vi-VN") + "đ";
 }

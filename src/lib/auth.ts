@@ -2,6 +2,7 @@ import * as bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { createSignedSession, isProductionHttps, readSignedSession } from "@/lib/security";
 
 const COOKIE_NAME = "mymy_admin_session";
 
@@ -23,10 +24,10 @@ export async function loginAdmin(formData: FormData) {
   }
 
   const store = await cookies();
-  store.set(COOKIE_NAME, String(admin.id), {
+  store.set(COOKIE_NAME, createSignedSession(admin.id), {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: isProductionHttps(),
     path: "/",
     maxAge: 60 * 60 * 12,
   });
@@ -43,11 +44,11 @@ export async function logoutAdmin() {
 
 export async function getCurrentAdmin() {
   const store = await cookies();
-  const adminId = Number(store.get(COOKIE_NAME)?.value || 0);
-  if (!adminId) return null;
+  const session = readSignedSession(store.get(COOKIE_NAME)?.value);
+  if (!session) return null;
 
   return prisma.admin.findUnique({
-    where: { id: adminId },
+    where: { id: session.adminId },
     select: { id: true, email: true, name: true, role: true },
   });
 }

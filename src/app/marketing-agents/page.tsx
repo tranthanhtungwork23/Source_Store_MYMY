@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MarketingAgentLab } from "@/components/MarketingAgentLab";
 
 export default function MarketingAgentsPage() {
@@ -11,8 +12,8 @@ export default function MarketingAgentsPage() {
             <p className="mt-2 text-sm leading-6 text-stone-600">Bản demo local để Tùng kiểm tra cấu trúc phòng marketing AI, vai trò, logic suy luận và luồng phối hợp.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a href="/" className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Về website</a>
-            <a href="/admin/dashboard" className="rounded-full bg-orange-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-orange-700">Vào admin</a>
+            <Link href="/" className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Về website</Link>
+            <Link href="/admin/dashboard" className="rounded-full bg-orange-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-orange-700">Vào admin</Link>
           </div>
         </div>
         <MarketingAgentLab />

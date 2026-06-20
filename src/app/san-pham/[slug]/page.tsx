@@ -5,6 +5,8 @@ import { ProductFallbackVisual } from "@/components/ProductFallbackVisual";
 import { createProductOrder } from "@/lib/actions";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 function money(value: number) {
   return value.toLocaleString("vi-VN") + "đ";
 }
@@ -122,7 +124,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-stone-700">Số điện thoại</label>
-                <input name="phone" required placeholder="Ví dụ: 09xxxxxxxx" className="w-full rounded-xl border p-3" />
+                <input name="phone" type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ ]{8,15}" required placeholder="Ví dụ: 09xxxxxxxx" className="w-full rounded-xl border p-3" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-stone-700">Địa chỉ giao hàng</label>

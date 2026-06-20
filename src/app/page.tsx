@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CartClient } from "@/components/CartClient";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const setting = await prisma.siteSetting.findUnique({ where: { id: 1 } });
@@ -65,7 +68,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
           <nav className="hidden items-center gap-5 text-sm font-bold text-stone-700 md:flex" aria-label="Menu chính">
             <a className="transition hover:text-orange-700" href="#san-pham">Sản phẩm</a>
-            <a className="transition hover:text-orange-700" href="/blog">Blog</a>
+            <Link className="transition hover:text-orange-700" href="/blog">Blog</Link>
             <a className="transition hover:text-orange-700" href="#cach-dat-hang">Cách đặt hàng</a>
             <a className="transition hover:text-orange-700" href="#lien-he">Liên hệ</a>
           </nav>
@@ -89,7 +92,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <h1 className="mt-2 text-3xl font-black leading-tight sm:text-4xl md:text-5xl">{setting?.heroTitle}</h1>
               <p className="mt-3 text-sm leading-6 text-stone-600 sm:text-base">{setting?.heroDescription}</p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <a href="#san-pham" className="rounded-full bg-orange-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-orange-700">Xem menu</a>
+                <Link href="#san-pham" className="rounded-full bg-orange-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-orange-700">Xem menu</Link>
                 <a href={zaloLink} className="rounded-full border border-orange-200 bg-white px-5 py-3 text-sm font-black text-orange-700 transition hover:bg-orange-50">Nhắn Zalo</a>
               </div>
             </div>
@@ -208,7 +211,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <h2 className="mt-1 text-xl font-black text-stone-900">Món nổi bật đang mở bán</h2>
                 <p className="mt-2 text-sm text-stone-600">Một vài món shop chọn sẵn để bạn xem nhanh nếu chưa biết bắt đầu từ đâu.</p>
               </div>
-              <a href="#menu" className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Xem menu đầy đủ</a>
+              <Link href="#menu" className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Xem menu đầy đủ</Link>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {featuredProducts.map((product) => (
@@ -220,7 +223,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <p className="mt-3 font-bold text-stone-900">{product.name}</p>
                   <p className="mt-1 text-sm text-stone-600">{product.shortDescription}</p>
                   <p className="mt-3 text-lg font-black text-orange-700">{product.price.toLocaleString("vi-VN")}đ</p>
-                  <a href={`/san-pham/${product.slug}`} className="mt-3 inline-flex rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Xem chi tiết món</a>
+                  <Link href={`/san-pham/${product.slug}`} className="mt-3 inline-flex rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Xem chi tiết món</Link>
                 </div>
               ))}
             </div>
@@ -299,7 +302,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <h2 className="mt-1 text-xl font-black text-stone-900">Bài viết mới từ shop</h2>
                 <p className="mt-2 text-sm text-stone-600">Xem thêm cách chọn món, bảo quản và mẹo đặt đồ ăn vặt tiện hơn.</p>
               </div>
-              <a href="/blog" className="rounded-full border border-stone-300 bg-white px-4 py-2 text-center text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Xem tất cả bài viết</a>
+              <Link href="/blog" className="rounded-full border border-stone-300 bg-white px-4 py-2 text-center text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Xem tất cả bài viết</Link>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {featuredPosts.map((post) => (
@@ -309,7 +312,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   </p>
                   <h3 className="mt-3 text-lg font-black leading-snug text-stone-900">{post.title}</h3>
                   <p className="mt-2 line-clamp-3 text-sm leading-6 text-stone-600">{post.excerpt}</p>
-                  <a href={`/blog/${post.slug}`} className="mt-4 inline-flex rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Đọc bài</a>
+                  <Link href={`/blog/${post.slug}`} className="mt-4 inline-flex rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Đọc bài</Link>
                 </article>
               ))}
             </div>
@@ -337,7 +340,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="mt-4 grid gap-3 text-sm text-stone-300">
               <a className="transition hover:text-white" href="#top">Trang chủ</a>
               <a className="transition hover:text-white" href="#san-pham">Sản phẩm</a>
-              <a className="transition hover:text-white" href="/blog">Blog</a>
+              <Link className="transition hover:text-white" href="/blog">Blog</Link>
               <a className="transition hover:text-white" href="#cach-dat-hang">Cách đặt hàng</a>
               <a className="transition hover:text-white" href="#lien-he">Liên hệ shop</a>
             </div>
@@ -360,6 +363,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     </div>
   );
 }
+
 
 
 

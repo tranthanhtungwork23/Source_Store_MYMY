@@ -24,14 +24,29 @@ function normalizeCouponType(value: string) {
 async function saveUploadedImage(file: File | null) {
   if (!file || file.size === 0) return null;
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
+  const maxUploadBytes = 5 * 1024 * 1024;
+  if (file.size > maxUploadBytes) {
+    throw new Error("Ảnh upload tối đa 5MB.");
+  }
+
   const ext = path.extname(file.name || "").toLowerCase() || ".jpg";
   const safeExt = [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext) ? ext : ".jpg";
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${safeExt}`;
+  const safeTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (file.type && !safeTypes.includes(file.type)) {
+    throw new Error("Chỉ hỗ trợ ảnh jpg, png, webp hoặc gif.");
+  }
+
+  const uploadDriver = process.env.UPLOAD_DRIVER || "local";
+  if (uploadDriver !== "local") {
+    throw new Error("UPLOAD_DRIVER hiện chưa được cấu hình. Hãy dùng URL ảnh ngoài hoặc bật local upload.");
+  }
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const fileName = `${Date.now()}-${randomBytes(6).toString("hex")}${safeExt}`;
   const uploadDir = path.join(process.cwd(), "public", "uploads");
   await mkdir(uploadDir, { recursive: true });
-  await writeFile(path.join(uploadDir, fileName), buffer);
+  await writeFile(path.join(uploadDir, fileName), buffer, { flag: "wx" });
   return `/uploads/${fileName}`;
 }
 

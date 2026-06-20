@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AdminNav } from "@/components/AdminNav";
 import { requireAdmin } from "@/lib/auth";
 import { saveCategory, toggleCategory } from "@/lib/actions";
@@ -11,43 +12,43 @@ export default async function CategoriesPage() {
   });
 
   return (
-    <main suppressHydrationWarning className="min-h-screen bg-orange-50 px-4 py-4 sm:px-6 sm:py-6">
-      <div suppressHydrationWarning className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[280px_1fr] lg:gap-6">
+    <main className="min-h-screen bg-orange-50 px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[280px_1fr] lg:gap-6">
         <AdminNav name={admin.name} />
-        <section suppressHydrationWarning className="space-y-6">
+        <section className="space-y-6">
           <h1 className="text-3xl font-black sm:text-4xl">Quản lý danh mục</h1>
 
-          <form suppressHydrationWarning action={saveCategory} className="grid gap-4 rounded-3xl bg-white p-5 shadow-sm sm:p-6 md:grid-cols-2">
-            <input suppressHydrationWarning name="name" required placeholder="Tên danh mục" className="rounded-xl border p-3" />
-            <input suppressHydrationWarning name="slug" placeholder="slug-tu-dong-neu-bo-trong" className="rounded-xl border p-3" />
-            <input suppressHydrationWarning name="sortOrder" type="number" defaultValue={0} placeholder="Thứ tự" className="rounded-xl border p-3" />
-            <label className="flex items-center gap-2 rounded-2xl bg-orange-50 px-4 py-3"><input suppressHydrationWarning name="isActive" type="checkbox" defaultChecked />Đang hiển thị</label>
-            <textarea suppressHydrationWarning name="description" placeholder="Mô tả danh mục" className="rounded-xl border p-3 md:col-span-2" />
-            <button suppressHydrationWarning className="rounded-full bg-orange-600 px-5 py-3 font-bold text-white md:col-span-2">Lưu danh mục</button>
+          <form action={saveCategory} className="grid gap-4 rounded-3xl bg-white p-5 shadow-sm sm:p-6 md:grid-cols-2">
+            <input name="name" required placeholder="Tên danh mục" className="rounded-xl border p-3" />
+            <input name="slug" placeholder="slug-tu-dong-neu-bo-trong" className="rounded-xl border p-3" />
+            <input name="sortOrder" type="number" defaultValue={0} placeholder="Thứ tự" className="rounded-xl border p-3" />
+            <label className="flex items-center gap-2 rounded-2xl bg-orange-50 px-4 py-3"><input name="isActive" type="checkbox" defaultChecked />Đang hiển thị</label>
+            <textarea name="description" placeholder="Mô tả danh mục" className="rounded-xl border p-3 md:col-span-2" />
+            <button className="rounded-full bg-orange-600 px-5 py-3 font-bold text-white md:col-span-2">Lưu danh mục</button>
           </form>
 
-          <div suppressHydrationWarning className="grid gap-4 lg:hidden">
+          <div className="grid gap-4 lg:hidden">
             {categories.map((category) => (
-              <article suppressHydrationWarning key={category.id} className="rounded-3xl bg-white p-4 shadow-sm">
-                <div suppressHydrationWarning className="flex items-start justify-between gap-3">
-                  <div suppressHydrationWarning>
+              <article key={category.id} className="rounded-3xl bg-white p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
                     <h2 className="text-lg font-bold">{category.name}</h2>
-                    <p suppressHydrationWarning className="mt-1 text-sm text-stone-500">/{category.slug}</p>
+                    <p className="mt-1 text-sm text-stone-500">/{category.slug}</p>
                   </div>
-                  <span suppressHydrationWarning className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">{category._count.products} món</span>
+                  <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">{category._count.products} món</span>
                 </div>
-                <p suppressHydrationWarning className="mt-3 text-sm text-stone-700">{category.isActive ? "Đang bật" : "Đang tắt"}</p>
-                <div suppressHydrationWarning className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <a href={`/admin/categories/${category.id}`} className="rounded-full border px-4 py-3 text-center">Sửa</a>
-                  <form suppressHydrationWarning action={async () => { "use server"; await toggleCategory(category.id); }}>
-                    <button suppressHydrationWarning className="w-full rounded-full border px-4 py-3">{category.isActive ? "Ẩn" : "Hiện"}</button>
+                <p className="mt-3 text-sm text-stone-700">{category.isActive ? "Đang bật" : "Đang tắt"}</p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <Link href={`/admin/categories/${category.id}`} className="rounded-full border px-4 py-3 text-center">Sửa</Link>
+                  <form action={async () => { "use server"; await toggleCategory(category.id); }}>
+                    <button className="w-full rounded-full border px-4 py-3">{category.isActive ? "Ẩn" : "Hiện"}</button>
                   </form>
                 </div>
               </article>
             ))}
           </div>
 
-          <div suppressHydrationWarning className="hidden overflow-hidden rounded-3xl bg-white shadow-sm lg:block">
+          <div className="hidden overflow-hidden rounded-3xl bg-white shadow-sm lg:block">
             <table className="min-w-full text-sm">
               <thead className="bg-stone-900 text-white">
                 <tr>
@@ -66,10 +67,10 @@ export default async function CategoriesPage() {
                     <td className="px-4 py-3">{category._count.products}</td>
                     <td className="px-4 py-3">{category.isActive ? "Đang bật" : "Đang tắt"}</td>
                     <td className="px-4 py-3">
-                      <div suppressHydrationWarning className="flex flex-wrap gap-2">
-                        <a href={`/admin/categories/${category.id}`} className="rounded-full border px-4 py-2">Sửa</a>
-                        <form suppressHydrationWarning action={async () => { "use server"; await toggleCategory(category.id); }}>
-                          <button suppressHydrationWarning className="rounded-full border px-4 py-2">{category.isActive ? "Ẩn" : "Hiện"}</button>
+                      <div className="flex flex-wrap gap-2">
+                        <Link href={`/admin/categories/${category.id}`} className="rounded-full border px-4 py-2">Sửa</Link>
+                        <form action={async () => { "use server"; await toggleCategory(category.id); }}>
+                          <button className="rounded-full border px-4 py-2">{category.isActive ? "Ẩn" : "Hiện"}</button>
                         </form>
                       </div>
                     </td>

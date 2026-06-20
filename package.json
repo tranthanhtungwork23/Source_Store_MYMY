@@ -3,10 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "prisma generate --schema prisma/schema.dev.prisma && next dev",
+    "dev:prod-db": "prisma generate && next dev",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "prisma generate",
+    "db:generate:dev": "prisma generate --schema prisma/schema.dev.prisma",
+    "db:push": "prisma db push",
+    "db:push:dev": "prisma db push --schema prisma/schema.dev.prisma",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

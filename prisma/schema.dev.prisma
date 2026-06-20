@@ -1,9 +1,13 @@
+// Schema local cho dev (SQLite)
+// Dùng cho npm run dev hoặc local development
+
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -64,21 +68,21 @@ model Order {
   discount     Int         @default(0)
   couponCode   String?
   total        Int
-  status       OrderStatus @default(NEW)
+  status       String      @default("NEW")
   items        OrderItem[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 }
 
 model OrderItem {
-  id                  Int     @id @default(autoincrement())
+  id                  Int      @id @default(autoincrement())
   orderId             Int
   productId           Int?
   productNameSnapshot String
   priceSnapshot       Int
   quantity            Int
   lineTotal           Int
-  order               Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order               Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product             Product? @relation(fields: [productId], references: [id])
 }
 
@@ -101,26 +105,18 @@ model SiteSetting {
 }
 
 model BlogPost {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   title           String
-  slug            String   @unique
+  slug            String    @unique
   excerpt         String
   content         String
   coverImageUrl   String?
-  authorName      String   @default("MyMy Đồ Ăn Vặt")
+  authorName      String    @default("MyMy Đồ Ăn Vặt")
   metaTitle       String?
   metaDescription String?
-  isFeatured      Boolean  @default(false)
-  isPublished     Boolean  @default(false)
+  isFeatured      Boolean   @default(false)
+  isPublished     Boolean   @default(false)
   publishedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-enum OrderStatus {
-  NEW
-  CONFIRMED
-  SHIPPING
-  COMPLETED
-  CANCELLED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

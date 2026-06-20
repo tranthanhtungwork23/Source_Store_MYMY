@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createOrder } from "@/lib/actions";
 import { ProductFallbackVisual } from "@/components/ProductFallbackVisual";
 
@@ -40,7 +40,32 @@ export function CartClient({
   couponDiscountType?: string;
   couponDiscountValue?: number;
 }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // Initialize cart from localStorage on mount
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem("mymy-cart");
+      if (saved) {
+        const parsed = JSON.parse(saved) as Array<{ id: number; quantity: number }>;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const validIds = new Set(products.map(p => p.id));
+          const validCart = parsed
+            .filter(item => validIds.has(item.id))
+            .map(item => {
+              const product = products.find(p => p.id === item.id);
+              if (!product) return null;
+              const safeQty = Math.min(item.quantity, product.stock);
+              return safeQty > 0 ? { ...product, quantity: safeQty } : null;
+            })
+            .filter((item): item is CartItem => item !== null);
+          return validCart;
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return [];
+  });
   const [keyword, setKeyword] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [couponInput, setCouponInput] = useState("");
@@ -48,6 +73,19 @@ export function CartClient({
   const [mobileStep, setMobileStep] = useState<"menu" | "cart">("menu");
   const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const [mobileCheckoutStep, setMobileCheckoutStep] = useState<"items" | "info">("items");
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (cart.length > 0) {
+        localStorage.setItem("mymy-cart", JSON.stringify(cart.map(({ id, quantity }) => ({ id, quantity }))));
+      } else {
+        localStorage.removeItem("mymy-cart");
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [cart]);
 
   const visibleProducts = useMemo(() => {
     return products.filter((product) => {
@@ -126,14 +164,14 @@ export function CartClient({
     <div className="pb-28 lg:pb-0">
       <div className="sticky top-0 z-30 -mx-4 mb-4 bg-[#fff8ef]/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="grid grid-cols-2 gap-2 rounded-full bg-white p-1 shadow-sm">
-          <button suppressHydrationWarning
+          <button
             type="button"
             onClick={() => setMobileStep("menu")}
             className={`rounded-full px-4 py-3 text-sm font-extrabold ${mobileStep === "menu" ? "bg-orange-600 text-white" : "text-stone-600"}`}
           >
             Chọn món
           </button>
-          <button suppressHydrationWarning
+          <button
             type="button"
             onClick={openCartSheet}
             className={`rounded-full px-4 py-3 text-sm font-extrabold ${mobileStep === "cart" ? "bg-orange-600 text-white" : "text-stone-600"}`}
@@ -149,7 +187,7 @@ export function CartClient({
             <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-stone-700">Tìm món yêu thích</label>
-                <input suppressHydrationWarning
+                <input
                   value={keyword}
                   onChange={(event) => setKeyword(event.target.value)}
                   placeholder="Tìm bánh tráng, đậu phộng, trà tắc..."
@@ -157,11 +195,11 @@ export function CartClient({
                 />
               </div>
               <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-wrap md:px-0 md:pb-0">
-                <button suppressHydrationWarning type="button" onClick={() => setActiveCategory("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${activeCategory === "all" ? "bg-orange-600 text-white" : "border bg-white"}`}>
+                <button type="button" onClick={() => setActiveCategory("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${activeCategory === "all" ? "bg-orange-600 text-white" : "border bg-white"}`}>
                   Tất cả
                 </button>
                 {categories.map((category) => (
-                  <button suppressHydrationWarning
+                  <button
                     type="button"
                     key={category.id}
                     onClick={() => setActiveCategory(category.slug)}
@@ -206,9 +244,9 @@ export function CartClient({
                         ) : null}
                         {cartItem ? (
                           <div className="flex items-center rounded-full border border-orange-200 bg-orange-50 p-1">
-                            <button suppressHydrationWarning type="button" onClick={() => changeQty(product.id, -1)} className="h-9 w-9 rounded-full bg-white font-black text-orange-700 shadow-sm">-</button>
+                            <button type="button" onClick={() => changeQty(product.id, -1)} className="h-9 w-9 rounded-full bg-white font-black text-orange-700 shadow-sm">-</button>
                             <span className="min-w-8 text-center text-sm font-black">{cartItem.quantity}</span>
-                            <button suppressHydrationWarning type="button" onClick={() => changeQty(product.id, 1)} className="h-9 w-9 rounded-full bg-orange-600 font-black text-white shadow-sm">+</button>
+                            <button type="button" onClick={() => changeQty(product.id, 1)} className="h-9 w-9 rounded-full bg-orange-600 font-black text-white shadow-sm">+</button>
                           </div>
                         ) : null}
                       </div>
@@ -218,7 +256,7 @@ export function CartClient({
                     <Link href={`/san-pham/${product.slug}`} className="rounded-full border border-stone-300 bg-white px-3 py-3 text-center text-sm font-extrabold text-stone-900 shadow-sm transition hover:border-orange-300 hover:text-orange-700">
                       Xem món
                     </Link>
-                    <button suppressHydrationWarning
+                    <button
                       type="button"
                       onClick={() => add(product)}
                       disabled={product.stock <= 0 || Boolean(cartItem && cartItem.quantity >= product.stock)}
@@ -244,20 +282,20 @@ export function CartClient({
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-orange-600 px-3 py-1 text-sm font-bold text-white">{cartCount} món</span>
-              <button suppressHydrationWarning type="button" onClick={closeCartSheet} className="rounded-full border border-orange-100 px-3 py-1 text-sm font-black text-stone-600 lg:hidden">
+              <button type="button" onClick={closeCartSheet} className="rounded-full border border-orange-100 px-3 py-1 text-sm font-black text-stone-600 lg:hidden">
                 Đóng
               </button>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-orange-50 p-1 lg:hidden">
-            <button suppressHydrationWarning
+            <button
               type="button"
               onClick={() => setMobileCheckoutStep("items")}
               className={`rounded-xl px-3 py-2 text-sm font-extrabold ${mobileCheckoutStep === "items" ? "bg-white text-orange-700 shadow-sm" : "text-stone-600"}`}
             >
               1. Kiểm tra món
             </button>
-            <button suppressHydrationWarning
+            <button
               type="button"
               onClick={showCartInfoStep}
               disabled={!cart.length}
@@ -271,7 +309,7 @@ export function CartClient({
             <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-stone-700">
               <p className="font-bold text-stone-900">Bạn chưa chọn món nào</p>
               <p className="mt-1 text-sm">Bấm “Thêm vào giỏ” ở món bạn thích. Giỏ hàng và tổng tiền sẽ cập nhật ngay.</p>
-              <button suppressHydrationWarning type="button" onClick={closeCartSheet} className="mt-3 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white lg:hidden">
+              <button type="button" onClick={closeCartSheet} className="mt-3 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white lg:hidden">
                 Chọn món ngay
               </button>
             </div>
@@ -284,10 +322,10 @@ export function CartClient({
                   <span className="shrink-0 font-bold text-orange-700">{money(item.price * item.quantity)}</span>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <button suppressHydrationWarning type="button" onClick={() => changeQty(item.id, -1)} className="h-9 w-9 rounded-full bg-white font-black text-orange-700 shadow-sm">-</button>
+                  <button type="button" onClick={() => changeQty(item.id, -1)} className="h-9 w-9 rounded-full bg-white font-black text-orange-700 shadow-sm">-</button>
                   <span className="min-w-8 text-center font-black">{item.quantity}</span>
-                  <button suppressHydrationWarning type="button" onClick={() => changeQty(item.id, 1)} className="h-9 w-9 rounded-full bg-orange-600 font-black text-white shadow-sm">+</button>
-                  <button suppressHydrationWarning type="button" onClick={() => changeQty(item.id, -item.quantity)} className="ml-auto text-sm font-bold text-red-600">
+                  <button type="button" onClick={() => changeQty(item.id, 1)} className="h-9 w-9 rounded-full bg-orange-600 font-black text-white shadow-sm">+</button>
+                  <button type="button" onClick={() => changeQty(item.id, -item.quantity)} className="ml-auto text-sm font-bold text-red-600">
                     Xóa
                   </button>
                 </div>
@@ -296,7 +334,7 @@ export function CartClient({
           </div>
 
           {cart.length && mobileCheckoutStep === "items" ? (
-            <button suppressHydrationWarning
+            <button
               type="button"
               onClick={showCartInfoStep}
               className="mt-4 w-full rounded-full bg-stone-900 px-5 py-3 font-extrabold text-white lg:hidden"
@@ -308,7 +346,7 @@ export function CartClient({
           {couponCode ? (
             <div className={mobileCheckoutStep === "info" ? "mt-5 rounded-2xl border border-dashed border-orange-300 bg-orange-50 p-4 text-sm block" : "mt-5 hidden rounded-2xl border border-dashed border-orange-300 bg-orange-50 p-4 text-sm lg:block"}>
               <p className="font-bold text-orange-700">Mã khuyến mãi đang mở</p>
-              <input suppressHydrationWarning
+              <input
                 value={couponInput}
                 onChange={(event) => setCouponInput(event.target.value.toUpperCase())}
                 placeholder="Nhập mã coupon"
@@ -351,27 +389,27 @@ export function CartClient({
           ) : null}
 
           <form action={createOrder} className={`${mobileCheckoutStep === "info" ? "block" : "hidden lg:block"} mt-5 space-y-3`}>
-            <input suppressHydrationWarning type="hidden" name="items" value={JSON.stringify(cart.map(({ id, quantity }) => ({ id, quantity })))} />
-            <input suppressHydrationWarning type="hidden" name="couponCode" value={couponInput} />
+            <input type="hidden" name="items" value={JSON.stringify(cart.map(({ id, quantity }) => ({ id, quantity })))} />
+            <input type="hidden" name="couponCode" value={couponInput} />
             <div className="rounded-2xl bg-orange-50 p-3 text-sm text-stone-700 lg:hidden">
               <p className="font-bold text-stone-900">Bước cuối: thông tin nhận hàng</p>
               <p className="mt-1">Chỉ cần tên, số điện thoại và địa chỉ. Shop sẽ gọi xác nhận trước khi giao.</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">Tên khách hàng</label>
-              <input suppressHydrationWarning name="customerName" required placeholder="Ví dụ: Nguyễn Văn A" className="w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
+              <input name="customerName" required placeholder="Ví dụ: Nguyễn Văn A" className="w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">Số điện thoại</label>
-              <input suppressHydrationWarning name="phone" required placeholder="Ví dụ: 09xxxxxxxx" className="w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
+              <input name="phone" type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ ]{8,15}" required placeholder="Ví dụ: 09xxxxxxxx" className="w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">Địa chỉ giao hàng</label>
-              <input suppressHydrationWarning name="address" required placeholder="Số nhà, đường, phường/xã, quận/huyện..." className="w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
+              <input name="address" required placeholder="Số nhà, đường, phường/xã, quận/huyện..." className="w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">Ghi chú thêm</label>
-              <textarea suppressHydrationWarning name="note" placeholder="Ít cay, thêm sốt, giao sau 18h..." className="min-h-24 w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
+              <textarea name="note" placeholder="Ít cay, thêm sốt, giao sau 18h..." className="min-h-24 w-full rounded-xl border p-3 outline-none focus:border-orange-500" />
             </div>
             <div className="rounded-2xl bg-stone-50 p-4 text-sm text-stone-600">
               <p className="font-bold text-stone-900">Lưu ý đặt hàng</p>
@@ -398,10 +436,10 @@ export function CartClient({
               </div>
             ) : null}
             <div className="grid gap-2 lg:block">
-              <button suppressHydrationWarning type="button" onClick={() => setMobileCheckoutStep("items")} className="rounded-full border border-orange-200 px-5 py-3 font-bold text-orange-700 lg:hidden">
+              <button type="button" onClick={() => setMobileCheckoutStep("items")} className="rounded-full border border-orange-200 px-5 py-3 font-bold text-orange-700 lg:hidden">
                 Quay lại kiểm tra món
               </button>
-              <button suppressHydrationWarning disabled={!cart.length} className="w-full rounded-full bg-stone-900 px-5 py-3 font-bold text-white disabled:opacity-40">
+              <button disabled={!cart.length} className="w-full rounded-full bg-stone-900 px-5 py-3 font-bold text-white disabled:opacity-40">
                 Đặt món ngay
               </button>
             </div>
@@ -409,7 +447,7 @@ export function CartClient({
         </aside>
       </div>
 
-      {isCartSheetOpen ? <button suppressHydrationWarning type="button" aria-label="Đóng giỏ hàng" onClick={closeCartSheet} className="fixed inset-0 z-40 bg-black/35 lg:hidden" /> : null}
+      {isCartSheetOpen ? <button type="button" aria-label="Đóng giỏ hàng" onClick={closeCartSheet} className="fixed inset-0 z-40 bg-black/35 lg:hidden" /> : null}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-orange-100 bg-white/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-3">
@@ -418,7 +456,7 @@ export function CartClient({
             <p className="text-lg font-black text-orange-700">{money(finalTotal)}</p>
           </div>
           {mobileStep === "menu" ? (
-            <button suppressHydrationWarning
+            <button
               type="button"
               onClick={openCartSheet}
               className="rounded-full bg-stone-900 px-5 py-3 text-sm font-extrabold text-white"
@@ -426,7 +464,7 @@ export function CartClient({
               {cartCount ? "Đặt món" : "Xem giỏ"}
             </button>
           ) : mobileCheckoutStep === "items" && cart.length ? (
-            <button suppressHydrationWarning
+            <button
               type="button"
               onClick={showCartInfoStep}
               className="rounded-full bg-stone-900 px-5 py-3 text-sm font-extrabold text-white"
@@ -434,7 +472,7 @@ export function CartClient({
               Nhập thông tin
             </button>
           ) : (
-            <button suppressHydrationWarning
+            <button
               type="button"
               onClick={() => {
                 setMobileStep("menu");

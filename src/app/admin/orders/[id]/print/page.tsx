@@ -18,41 +18,41 @@ export default async function PrintOrderPage({ params }: { params: Promise<{ id:
   if (!order) notFound();
 
   return (
-    <main suppressHydrationWarning className="min-h-screen bg-white px-4 py-6 text-stone-900 sm:p-8">
-      <div suppressHydrationWarning className="mx-auto max-w-3xl">
-        <div suppressHydrationWarning className="mb-6 grid gap-3 sm:flex sm:justify-between print:hidden">
+    <main className="min-h-screen bg-white px-4 py-6 text-stone-900 sm:p-8">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-6 grid gap-3 sm:flex sm:justify-between print:hidden">
           <Link href={`/admin/orders/${order.id}`} className="rounded-full border px-5 py-3 text-center font-bold">← Quay lại</Link>
-          <span suppressHydrationWarning className="rounded-full bg-stone-900 px-5 py-3 text-center font-bold text-white">Dùng Ctrl+P để in</span>
+          <span className="rounded-full bg-stone-900 px-5 py-3 text-center font-bold text-white">Dùng Ctrl+P để in</span>
         </div>
 
-        <section suppressHydrationWarning className="border border-stone-300 p-4 sm:p-8">
-          <div suppressHydrationWarning className="grid gap-4 border-b pb-5 sm:flex sm:justify-between sm:gap-6">
-            <div suppressHydrationWarning>
+        <section className="border border-stone-300 p-4 sm:p-8">
+          <div className="grid gap-4 border-b pb-5 sm:flex sm:justify-between sm:gap-6">
+            <div>
               <h1 className="text-xl font-black sm:text-2xl sm:text-3xl">{setting?.siteName || "MyMy Đồ Ăn Vặt"}</h1>
-              <p suppressHydrationWarning className="mt-1 text-sm">Hotline: {setting?.hotline}</p>
+              <p className="mt-1 text-sm">Hotline: {setting?.hotline}</p>
             </div>
-            <div suppressHydrationWarning className="sm:text-right">
-              <p suppressHydrationWarning className="text-sm uppercase tracking-widest">Phiếu đơn hàng</p>
+            <div className="sm:text-right">
+              <p className="text-sm uppercase tracking-widest">Phiếu đơn hàng</p>
               <h2 className="text-xl font-black sm:text-2xl">#{order.code}</h2>
-              <p suppressHydrationWarning className="text-sm">{order.createdAt.toLocaleString("vi-VN")}</p>
+              <p className="text-sm">{order.createdAt.toLocaleString("vi-VN")}</p>
             </div>
           </div>
 
-          <div suppressHydrationWarning className="mt-5 grid gap-4 md:grid-cols-2">
-            <div suppressHydrationWarning>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div>
               <h3 className="font-bold">Thông tin khách</h3>
-              <p suppressHydrationWarning>Tên: {order.customerName}</p>
-              <p suppressHydrationWarning>SĐT: {order.phone}</p>
-              <p suppressHydrationWarning>Địa chỉ: {order.address}</p>
+              <p>Tên: {order.customerName}</p>
+              <p>SĐT: {order.phone}</p>
+              <p>Địa chỉ: {order.address}</p>
             </div>
-            <div suppressHydrationWarning>
+            <div>
               <h3 className="font-bold">Trạng thái</h3>
-              <p suppressHydrationWarning>{order.status}</p>
-              {order.note ? <p suppressHydrationWarning>Ghi chú: {order.note}</p> : null}
+              <p>{order.status}</p>
+              {order.note ? <p>Ghi chú: {order.note}</p> : null}
             </div>
           </div>
 
-          <div suppressHydrationWarning className="mt-6 overflow-x-auto"><table className="min-w-[640px] w-full border-collapse text-sm">
+          <div className="mt-6 overflow-x-auto"><table className="min-w-[640px] w-full border-collapse text-sm">
             <thead>
               <tr className="border-b bg-stone-100">
                 <th className="p-3 text-left">Sản phẩm</th>
@@ -73,15 +73,15 @@ export default async function PrintOrderPage({ params }: { params: Promise<{ id:
             </tbody>
           </table></div>
 
-          <div suppressHydrationWarning className="ml-auto mt-6 max-w-xs space-y-2 text-sm">
-            <div suppressHydrationWarning className="flex justify-between"><span suppressHydrationWarning>Tạm tính</span><span suppressHydrationWarning>{money(order.subtotal)}</span></div>
-            <div suppressHydrationWarning className="flex justify-between"><span suppressHydrationWarning>Phí ship</span><span suppressHydrationWarning>{money(order.shippingFee)}</span></div>
-            <div suppressHydrationWarning className="flex justify-between"><span suppressHydrationWarning>Giảm giá</span><span suppressHydrationWarning>-{money(order.discount)}</span></div>
-            {order.couponCode ? <div suppressHydrationWarning className="flex justify-between"><span suppressHydrationWarning>Coupon</span><span suppressHydrationWarning>{order.couponCode}</span></div> : null}
-            <div suppressHydrationWarning className="flex justify-between border-t pt-3 text-xl font-black"><span suppressHydrationWarning>Tổng</span><span suppressHydrationWarning>{money(order.total)}</span></div>
+          <div className="ml-auto mt-6 max-w-xs space-y-2 text-sm">
+            <div className="flex justify-between"><span>Tạm tính</span><span>{money(order.subtotal)}</span></div>
+            <div className="flex justify-between"><span>Phí ship</span><span>{money(order.shippingFee)}</span></div>
+            <div className="flex justify-between"><span>Giảm giá</span><span>-{money(order.discount)}</span></div>
+            {order.couponCode ? <div className="flex justify-between"><span>Coupon</span><span>{order.couponCode}</span></div> : null}
+            <div className="flex justify-between border-t pt-3 text-xl font-black"><span>Tổng</span><span>{money(order.total)}</span></div>
           </div>
 
-          <p suppressHydrationWarning className="mt-8 text-center text-sm text-stone-500">Cảm ơn quý khách đã ủng hộ!</p>
+          <p className="mt-8 text-center text-sm text-stone-500">Cảm ơn quý khách đã ủng hộ!</p>
         </section>
       </div>
     </main>
